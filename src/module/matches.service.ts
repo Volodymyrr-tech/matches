@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 // import { Match } from './matches.schema';
 
-export interface Match {
+export interface MatchData {
   homeTeam: string;
   awayTeam: string;
   homeScore: number;
@@ -13,15 +13,15 @@ export interface Match {
 @Injectable()
 export class MatchService {
   constructor(
-    @InjectModel('Match') private readonly matchModel: Model<Match>,
+    @InjectModel('Match') private readonly matchModel: Model<MatchData>,
   ) {}
 
-  async create(createMatchDto: Match): Promise<Match> {
-    const createdMatch = new this.matchModel(createMatchDto);
+  async create(createMatch: MatchData): Promise<MatchData> {
+    const createdMatch = new this.matchModel(createMatch);
     return createdMatch.save();
   }
 
-  async findAll(): Promise<Match[]> {
+  async findAll(): Promise<MatchData[]> {
     return this.matchModel.find().exec();
   }
 }
