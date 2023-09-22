@@ -1,15 +1,28 @@
-import * as mongoose from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
 
-export const MatchesSchema = new mongoose.Schema({
-  homeTeam: String,
-  awayTeam: String,
-  homeScore: Number,
-  awayScore: Number,
-});
+export type MatchDocument = HydratedDocument<Match>;
 
-export interface Match extends mongoose.Document {
+@Schema({ collection: 'Matches' })
+export class Match extends Document {
+  @Prop()
   homeTeam: string;
+
+  @Prop()
   awayTeam: string;
+
+  @Prop()
   homeScore: number;
+
+  @Prop()
   awayScore: number;
 }
+
+export const MatchesSchema = SchemaFactory.createForClass(Match);
+
+// export interface Match extends mongoose.Document {
+//   homeTeam: string;
+//   awayTeam: string;
+//   homeScore: number;
+//   awayScore: number;
+// }

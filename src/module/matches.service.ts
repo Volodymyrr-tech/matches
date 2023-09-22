@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Match } from './matches.schema';
+// import { Match } from './matches.schema';
+
+export interface Match {
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number;
+  awayScore: number;
+}
 
 @Injectable()
 export class MatchService {
@@ -9,7 +16,7 @@ export class MatchService {
     @InjectModel('Match') private readonly matchModel: Model<Match>,
   ) {}
 
-  async create(createMatchDto: any): Promise<Match> {
+  async create(createMatchDto: Match): Promise<Match> {
     const createdMatch = new this.matchModel(createMatchDto);
     return createdMatch.save();
   }

@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MatchService } from './matches.service';
-// import { AppController } from './app.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MatchesSchema } from './matches.schema';
 
@@ -9,7 +8,5 @@ import { MatchesSchema } from './matches.schema';
     MongooseModule.forFeature([{ name: 'Matches', schema: MatchesSchema }]),
   ],
   providers: [MatchService],
-  exports: [MatchService],
 })
-export class MatchModule {}
-
+export class MatchesModule {}
