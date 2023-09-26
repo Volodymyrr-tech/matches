@@ -1,4 +1,14 @@
 {
   "singleQuote": true,
-  "trailingComma": "all"
+  "semi": true,
+  "trailingComma": "all",
+  "tabWidth": 2,
+  "overrides": [
+    {
+      "files": ["*.js", "*.jsx", "*.ts", "*.tsx"],
+      "options": {
+        "tabWidth": 2
+      }
+    }
+  ]
 }
