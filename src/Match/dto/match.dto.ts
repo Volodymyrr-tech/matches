@@ -1,4 +1,4 @@
-export class UpdateMatchDto {
+export class MatchDto {
   readonly homeTeam: string;
   readonly awayTeam: string;
   readonly homeScore: number;
