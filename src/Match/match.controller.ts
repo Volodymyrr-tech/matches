@@ -7,10 +7,10 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { MatchService } from './matches.service';
-import { MatchDto } from './dto/match.dto';
-import { Match } from './matches.schema';
+import { MatchService } from './match.service';
+import { Match } from '../DB/match.schema';
 import { TeamStatsDto } from './dto/team-stats.dto';
+import { MatchDto } from './dto/match.dto';
 
 @Controller('matches')
 export class MatchController {

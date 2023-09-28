@@ -1,15 +1,18 @@
 import { Module } from '@nestjs/common';
-import { MatchService } from './matches.service';
+import { MatchService } from './match.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { MatchesSchema } from './matches.schema';
-import { MatchController } from './matches.contoller';
+import { Match, MatchesSchema } from '../DB/match.schema';
+import { MatchController } from './match.controller';
+import { MatchDto } from './dto/match.dto';
+import { DbModule } from '../db/db.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Match', schema: MatchesSchema }]),
+    DbModule,
   ],
   controllers: [MatchController],
-  providers: [MatchService],
-  exports: [MatchService],
+  providers: [MatchService, Match, MatchDto],
+  exports: [MatchService, Match, MatchDto],
 })
 export class MatchModule {}

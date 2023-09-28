@@ -4,5 +4,6 @@ export class TeamStatsDto {
   readonly lost: number;
   readonly drawn: number;
   readonly missedGoals: number;
+  readonly scoredGoals: number;
   readonly score: number;
 }

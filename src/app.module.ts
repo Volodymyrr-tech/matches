@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MatchModule } from './Match/match.module';
+import { TourModule } from './tour/tour.module';
+import { DbModule } from './db/db.module';
 
 @Module({
   imports: [
@@ -12,6 +14,8 @@ import { MatchModule } from './Match/match.module';
     }),
     MongooseModule.forRoot(process.env.DB_URI),
     MatchModule,
+    TourModule,
+    DbModule,
   ],
   providers: [],
 })
