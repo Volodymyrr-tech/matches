@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MatchService } from './match.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Match, MatchesSchema } from '../DB/match.schema';
+import { Match, MatchesSchema } from '../Database/match.schema';
 import { MatchController } from './match.controller';
-import { MatchDto } from './dto/match.dto';
-import { DbModule } from '../db/db.module';
+import { MatchDto } from '../Dto/match.dto';
+import { DbModule } from '../Database/db.module';
 
 @Module({
   imports: [

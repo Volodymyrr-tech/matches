@@ -1,4 +1,4 @@
-import { MatchDto } from '../Match/dto/match.dto';
+import { MatchDto } from '../Dto/match.dto';
 import { TourService } from './tour.service';
 import {
   Body,
@@ -9,9 +9,11 @@ import {
   NotFoundException,
   Param,
   Post,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 
-@Controller('tournaments')
+@Controller('tours')
 export class TourController {
   constructor(private readonly tourService: TourService) {}
   @Get()
@@ -32,20 +34,16 @@ export class TourController {
   }
 
   @Post('add-tour')
-  createMatch(@Body() createMatchDto: MatchDto): MatchDto {
-    const addedMatch = this.tourService.addTournamentMatch(createMatchDto);
-
-    return addedMatch;
+  @UsePipes(new ValidationPipe({ whitelist: true }))
+  addTour(@Body() matchDto: MatchDto[]) {
+    return this.tourService.addTour(matchDto);
   }
 
   @Delete(':id')
-  deleteMatchById(@Param('id') id: string): void {
-    // Parse the ID to an integer
+  deleteTour(@Param('id') id: string) {
     const matchId = parseInt(id, 10);
-
     try {
-      // Call the service method to delete the match by ID
-      this.tourService.deleteMatchById(matchId);
+      return this.tourService.deleteTour(matchId);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);

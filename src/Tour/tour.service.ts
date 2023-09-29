@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { MatchDto } from 'src/Match/dto/match.dto';
+import { MatchDto } from 'src/Dto/match.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Match } from '../DB/match.schema';
+import { Match } from '../Database/match.schema';
 
 @Injectable()
 export class TourService {
@@ -20,71 +20,53 @@ export class TourService {
     this.teams = await this.getTeamNames();
     this.generateSchedule(this.teams);
   }
-  addTournamentMatch(newMatch: MatchDto): MatchDto {
-    // Check if a match with the same home and away teams already exists in the list
-    const isDuplicateMatch = this.matches.some((match) =>
-      this.isDuplicateMatch(newMatch, match),
-    );
 
-    // Check if the match is in the appropriate form (with both matches of a tour)
-    if (!this.isMatchWithReverseMatch(newMatch)) {
-      throw new Error('Match is not in the appropriate form.');
+  async addTour(tour: MatchDto[]): Promise<string> {
+    // Check if the request is in appropriate form
+    if (
+      tour.length !== 2 ||
+      !tour.every(
+        (match) =>
+          'homeTeam' in match &&
+          'awayTeam' in match &&
+          'homeScore' in match &&
+          'awayScore' in match,
+      )
+    ) {
+      return 'Request is not in appropriate form';
     }
 
-    if (!isDuplicateMatch) {
-      // If no duplicate match, generate a unique tourId for the new tour
-      const newTourId = this.tourIdCounter++;
+    // Check whether this tour with exact matches is already in matches array
+    const tourExists = this.matches.some((match, index) => {
+      return (
+        index % 2 === 0 && // Check every pair of matches
+        this.matches[index].homeTeam === tour[0].homeTeam &&
+        this.matches[index].awayTeam === tour[0].awayTeam &&
+        this.matches[index + 1].homeTeam === tour[1].homeTeam &&
+        this.matches[index + 1].awayTeam === tour[1].awayTeam
+      );
+    });
 
-      // Add the new match to the list with the generated tourId
-      const matchWithTourId: MatchDto = {
-        ...newMatch,
-        id: newTourId, // Use the generated tourId
-      };
-
-      this.matches.push(matchWithTourId);
-      return matchWithTourId;
-    } else {
-      // Handle the case where a duplicate match is encountered
-      throw new Error('A duplicate match already exists.');
+    if (tourExists) {
+      return 'This tour already exists';
     }
+
+    // If the tour doesn't exist and the request is in appropriate form, add the tour
+    const id = Math.floor(this.matches.length / 2) + 1; // Calculate the next id
+
+    const newTour = tour.map((match) => ({
+      id,
+      homeTeam: match.homeTeam,
+      awayTeam: match.awayTeam,
+      homeScore: match.homeScore,
+      awayScore: match.awayScore,
+    })); // Assign the id to each match and only include required fields
+
+    this.matches.push(...newTour);
+
+    return 'Tour added successfully';
   }
 
-  private isDuplicateMatch(
-    newMatch: MatchDto,
-    existingMatch: MatchDto,
-  ): boolean {
-    // Check if the teams and scores are the same for both matches
-    return (
-      (newMatch.homeTeam === existingMatch.homeTeam &&
-        newMatch.awayTeam === existingMatch.awayTeam &&
-        newMatch.homeScore === existingMatch.homeScore &&
-        newMatch.awayScore === existingMatch.awayScore) ||
-      (newMatch.homeTeam === existingMatch.awayTeam &&
-        newMatch.awayTeam === existingMatch.homeTeam &&
-        newMatch.homeScore === existingMatch.awayScore &&
-        newMatch.awayScore === existingMatch.homeScore)
-    );
-  }
-
-  private isMatchWithReverseMatch(newMatch: MatchDto): boolean {
-    // Check if there's a reverse match with the same teams and scores
-    return this.matches.some(
-      (match) =>
-        match.homeTeam === newMatch.awayTeam &&
-        match.awayTeam === newMatch.homeTeam &&
-        match.homeScore === newMatch.awayScore &&
-        match.awayScore === newMatch.homeScore,
-    );
-  }
-
-  private generateUniqueId(): number {
-    // Find the highest existing ID in the list of matches
-    const existingIds = this.matches.map((match) => match.id);
-    const maxId = Math.max(...existingIds, 0);
-
-    // Generate a new unique ID
-    return maxId + 1;
-  }
   async getTeamNames(): Promise<string[]> {
     const distinctHomeTeams = await this.matchModel.distinct('homeTeam').exec();
     const distinctAwayTeams = await this.matchModel.distinct('awayTeam').exec();
@@ -97,44 +79,33 @@ export class TourService {
   }
 
   private generateSchedule(teams: string[]): void {
-    const schedule: MatchDto[] = [];
+    const scheduleFirstHalf: MatchDto[] = [];
+    const scheduleSecondHalf: MatchDto[] = [];
+
+    if (teams.length % 2 !== 0) {
+      teams.push('Bye');
+    }
+
     const numTeams = teams.length;
     const numRounds = numTeams - 1;
     const matchesPerRound = numTeams / 2;
-    let tourId = 1; // Initialize tour ID
+
+    const fixedTeamOrder = [...teams];
 
     for (let round = 1; round <= numRounds; round++) {
       const roundMatchesFirstHalf: MatchDto[] = [];
       const roundMatchesSecondHalf: MatchDto[] = [];
 
       for (let i = 0; i < matchesPerRound; i++) {
-        const teamA = teams[i];
-        const teamB = teams[numTeams - i - 1];
+        const teamA = fixedTeamOrder[i];
+        const teamB = fixedTeamOrder[numTeams - i - 1];
 
         if (teamA !== 'Bye' && teamB !== 'Bye' && teamA !== teamB) {
-          // Generate random scores between 0 and 5 for home and away teams
-          const homeScore = Math.floor(Math.random() * 6); // 0 to 5
-          const awayScore = Math.floor(Math.random() * 6); // 0 to 5
-
-          // Create two matches with the same tourId
-          roundMatchesFirstHalf.push({
-            id: tourId,
-            homeTeam: teamA,
-            awayTeam: teamB,
-            homeScore,
-            awayScore,
-          });
+          const homeScore = Math.floor(Math.random() * 6);
+          const awayScore = Math.floor(Math.random() * 6);
 
           roundMatchesFirstHalf.push({
-            id: tourId,
-            homeTeam: teamB,
-            awayTeam: teamA,
-            homeScore,
-            awayScore,
-          });
-
-          roundMatchesSecondHalf.push({
-            id: tourId + 1, // Increment the id for the second half
+            id: 0,
             homeTeam: teamA,
             awayTeam: teamB,
             homeScore,
@@ -142,23 +113,26 @@ export class TourService {
           });
 
           roundMatchesSecondHalf.push({
-            id: tourId + 1, // Increment the id for the second half
+            id: 0,
             homeTeam: teamB,
             awayTeam: teamA,
             homeScore,
             awayScore,
           });
-
-          // Increment the tour ID for the next round
-          tourId += 2;
         }
       }
 
-      schedule.push(...roundMatchesFirstHalf);
-      schedule.push(...roundMatchesSecondHalf);
+      scheduleFirstHalf.push(...roundMatchesFirstHalf);
+      scheduleSecondHalf.push(...roundMatchesSecondHalf);
+
+      fixedTeamOrder.splice(1, 0, fixedTeamOrder.pop());
     }
 
-    this.matches = [...schedule];
+    this.matches = [...scheduleFirstHalf, ...scheduleSecondHalf].map(
+      (match, index) => {
+        return { ...match, id: Math.floor(index / 2) + 1 };
+      },
+    );
   }
 
   getTourById(id: number): MatchDto[] | null {
@@ -175,13 +149,14 @@ export class TourService {
   getSchedule(): MatchDto[] {
     return this.matches;
   }
-  deleteMatchById(matchId: number): void {
-    const index = this.matches.findIndex((match) => match.id === matchId);
+  async deleteTour(id: number): Promise<string> {
+    const initialLength = this.matches.length;
+    this.matches = this.matches.filter((match) => match.id !== id);
 
-    if (index !== -1) {
-      this.matches.splice(index, 1);
+    if (this.matches.length === initialLength) {
+      return 'No tour with this id exists';
     } else {
-      throw new NotFoundException(`Match with ID ${matchId} not found`);
+      return 'Tour deleted successfully';
     }
   }
 }
