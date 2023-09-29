@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MatchDto } from 'src/Dto/match.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -8,7 +8,6 @@ import { Match } from '../Database/match.schema';
 export class TourService {
   private matches: MatchDto[] = [];
   private teams: string[];
-  private tourIdCounter: number = 1;
 
   constructor(
     @InjectModel(Match.name)
@@ -22,6 +21,10 @@ export class TourService {
   }
 
   async addTour(tour: MatchDto[]): Promise<string> {
+    if (this.matches.length === 12) {
+      return 'You cannot add more tours into tournament!';
+    }
+
     // Check if the request is in appropriate form
     if (
       tour.length !== 2 ||
@@ -52,10 +55,11 @@ export class TourService {
     }
 
     // If the tour doesn't exist and the request is in appropriate form, add the tour
-    const id = Math.floor(this.matches.length / 2) + 1; // Calculate the next id
+    const tourId = Math.floor(this.matches.length / 2) + 1; // Calculate the next id
 
-    const newTour = tour.map((match) => ({
-      id,
+    const newTour = tour.map((match, index) => ({
+      matchId: this.matches.length + index + 1,
+      tourId,
       homeTeam: match.homeTeam,
       awayTeam: match.awayTeam,
       homeScore: match.homeScore,
@@ -105,7 +109,8 @@ export class TourService {
           const awayScore = Math.floor(Math.random() * 6);
 
           roundMatchesFirstHalf.push({
-            id: 0,
+            matchId: 0,
+            tourId: 0,
             homeTeam: teamA,
             awayTeam: teamB,
             homeScore,
@@ -113,7 +118,8 @@ export class TourService {
           });
 
           roundMatchesSecondHalf.push({
-            id: 0,
+            matchId: 0,
+            tourId: 0,
             homeTeam: teamB,
             awayTeam: teamA,
             homeScore,
@@ -130,14 +136,19 @@ export class TourService {
 
     this.matches = [...scheduleFirstHalf, ...scheduleSecondHalf].map(
       (match, index) => {
-        return { ...match, id: Math.floor(index / 2) + 1 };
+        const matchIndx = index + 1;
+        return {
+          ...match,
+          tourId: Math.floor(index / 2) + 1,
+          matchId: matchIndx,
+        };
       },
     );
   }
 
   getTourById(id: number): MatchDto[] | null {
     // Filter matches to get the matches for the specified tour ID
-    const tourMatches = this.matches.filter((match) => match.id === id);
+    const tourMatches = this.matches.filter((match) => match.tourId === id);
 
     if (tourMatches.length === 0) {
       return null; // Tour not found
@@ -146,12 +157,28 @@ export class TourService {
     return tourMatches;
   }
 
+  async updateScoresById(
+    matchId: number,
+    homeScore: number,
+    awayScore: number,
+  ): Promise<MatchDto | string> {
+    if (matchId === -1 || matchId > 12) {
+      return 'Match with the provided id not found';
+    }
+
+    // Update the scores for both home and away teams
+    this.matches[matchId].homeScore = homeScore;
+    this.matches[matchId].awayScore = awayScore;
+
+    return this.matches[matchId];
+  }
+
   getSchedule(): MatchDto[] {
     return this.matches;
   }
   async deleteTour(id: number): Promise<string> {
     const initialLength = this.matches.length;
-    this.matches = this.matches.filter((match) => match.id !== id);
+    this.matches = this.matches.filter((match) => match.tourId !== id);
 
     if (this.matches.length === initialLength) {
       return 'No tour with this id exists';

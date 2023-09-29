@@ -1,7 +1,8 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class MatchDto {
-  readonly id: number;
+  readonly matchId: number;
+  readonly tourId: number;
 
   @IsNotEmpty()
   @IsString()
@@ -13,9 +14,9 @@ export class MatchDto {
 
   @IsNotEmpty()
   @IsNumber()
-  readonly homeScore: number;
+  homeScore: number;
 
   @IsNotEmpty()
   @IsNumber()
-  readonly awayScore: number;
+  awayScore: number;
 }

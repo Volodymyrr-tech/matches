@@ -9,6 +9,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -37,6 +38,17 @@ export class TourController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   addTour(@Body() matchDto: MatchDto[]) {
     return this.tourService.addTour(matchDto);
+  }
+
+  @Put('update-scores/:id')
+  updateScores(
+    @Param('id') id: number,
+    @Body('homeScore')
+    homeScore: number,
+    @Body('awayScore')
+    awayScore: number,
+  ) {
+    return this.tourService.updateScoresById(id, homeScore, awayScore);
   }
 
   @Delete(':id')
