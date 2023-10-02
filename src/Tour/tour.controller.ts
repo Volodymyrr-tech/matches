@@ -5,6 +5,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   InternalServerErrorException,
   NotFoundException,
   Param,
@@ -30,8 +32,22 @@ export class TourController {
     if (!tour) {
       throw new NotFoundException(`Tour with ID ${id} not found`);
     }
-
     return tour;
+  }
+
+  @Get('get-matches-of-team/:teamName')
+  getMatchesByTeam(@Param('teamName') teamName: string): MatchDto[] {
+    try {
+      return this.tourService.getMatchesByTeam(teamName);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: error.message,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
 
   @Post('add-tour')

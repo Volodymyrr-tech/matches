@@ -20,6 +20,16 @@ export class TourService {
     this.generateSchedule(this.teams);
   }
 
+  public getMatchesByTeam(teamName: string): MatchDto[] {
+    if (!this.teams.includes(teamName)) {
+      throw new Error(`Team ${teamName} not found.`);
+    }
+
+    return this.matches.filter(
+      (match) => match.homeTeam === teamName || match.awayTeam === teamName,
+    );
+  }
+
   async addTour(tour: MatchDto[]): Promise<string> {
     if (this.matches.length === 12) {
       return 'You cannot add more tours into tournament!';
