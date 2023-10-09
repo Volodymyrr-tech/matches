@@ -44,6 +44,16 @@ export class MatchService {
     console.log('Match deleted');
     return await this.matchModel.findByIdAndRemove(id);
   }
+  async getTeamResults(teamName: string): Promise<TeamStatsDto> {
+    const teamStatistics: TeamStatsDto[] = await this.createAggregation();
+    const teamResult = teamStatistics.find(
+      (teamStats) => teamStats.team.toLowerCase() === teamName.toLowerCase()
+    );
+    if (!teamResult) {
+      throw new Error(`No results found for team ${teamName}`);
+    }
+    return teamResult;
+  }
 
   async createAggregation(): Promise<TeamStatsDto[]> {
     const teamStatistics: TeamStatsDto[] = await this.matchModel.aggregate([

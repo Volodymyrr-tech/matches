@@ -27,6 +27,14 @@ export class MatchController {
     return this.matchService.createAggregation();
   }
 
+  @Get('stats/:teamName')
+  async getTeamStats(
+    @Param('teamName') teamName: string,
+  ): Promise<TeamStatsDto | null> {
+    console.log('Aggregation 2');
+    return this.matchService.getTeamResults(teamName);
+  }
+
   @Get(':id')
   async getMatch(
     @Param('id')
